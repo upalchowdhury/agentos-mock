@@ -1,0 +1,46 @@
+policies:
+  - id: rbac_policy
+    name: RBAC Access Control
+    description: Role-based access control for agent operations
+    rules:
+      admin:
+        - invoke
+        - deploy
+        - delete
+        - view
+        - configure
+      developer:
+        - invoke
+        - deploy
+        - view
+      viewer:
+        - view
+
+  - id: budget_policy
+    name: Budget Cap Enforcement
+    description: Enforce budget caps per user role
+    budget_caps:
+      admin: 100000    # $1000 in cents
+      developer: 50000  # $500 in cents
+      viewer: 10000     # $100 in cents
+
+  - id: redaction_policy
+    name: PII Redaction
+    description: Automatically redact sensitive information
+    redaction_patterns:
+      - email
+      - ssn
+      - phone
+      - credit_card
+      - api_key
+      - password
+
+  - id: domain_allowlist_policy
+    name: Allowed External Domains
+    description: Restrict external API calls to approved domains
+    allowed_domains:
+      - api.openai.com
+      - api.anthropic.com
+      - "*.googleapis.com"
+      - "*.azure.com"
+      - "*.amazonaws.com"

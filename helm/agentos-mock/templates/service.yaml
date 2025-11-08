@@ -1,0 +1,28 @@
+{{- range $service := list "runtime" "registry" "ingest" "api" "bridge" "policy" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $service }}-mock
+  namespace: {{ $.Release.Namespace }}
+spec:
+  selector:
+    app: {{ $service }}-mock
+  ports:
+  - port: {{ index $.Values.services $service "port" }}
+    targetPort: {{ index $.Values.services $service "port" }}
+  type: ClusterIP
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-ui
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: web-ui
+  ports:
+  - port: 5173
+    targetPort: 5173
+  type: LoadBalancer

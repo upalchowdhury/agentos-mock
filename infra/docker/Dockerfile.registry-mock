@@ -1,0 +1,14 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY db/models.py /app/models.py
+COPY db/requirements.txt /app/db_requirements.txt
+COPY services/registry-mock/ /app/
+
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -r db_requirements.txt
+
+EXPOSE 8002
+
+CMD ["python", "app.py"]

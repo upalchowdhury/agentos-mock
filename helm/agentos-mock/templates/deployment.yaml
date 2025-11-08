@@ -1,0 +1,56 @@
+{{- range $service := list "runtime" "registry" "ingest" "api" "bridge" "policy" }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $service }}-mock
+  namespace: {{ $.Release.Namespace }}
+spec:
+  replicas: {{ index $.Values.services $service "replicaCount" }}
+  selector:
+    matchLabels:
+      app: {{ $service }}-mock
+  template:
+    metadata:
+      labels:
+        app: {{ $service }}-mock
+    spec:
+      containers:
+      - name: {{ $service }}-mock
+        image: {{ $.Values.image.registry }}/agentos-{{ $service }}-mock:{{ $.Values.image.tag }}
+        imagePullPolicy: {{ $.Values.image.pullPolicy }}
+        ports:
+        - containerPort: {{ index $.Values.services $service "port" }}
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://{{ $.Values.postgresql.auth.username }}:{{ $.Values.postgresql.auth.password }}@postgresql:5432/{{ $.Values.postgresql.auth.database }}"
+        resources:
+          {{- toYaml $.Values.resources | nindent 10 }}
+{{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-ui
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.web.replicaCount }}
+  selector:
+    matchLabels:
+      app: web-ui
+  template:
+    metadata:
+      labels:
+        app: web-ui
+    spec:
+      containers:
+      - name: web-ui
+        image: {{ .Values.image.registry }}/agentos-web-ui:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 5173
+        env:
+        - name: VITE_API_URL
+          value: "http://api-mock:8004"
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}

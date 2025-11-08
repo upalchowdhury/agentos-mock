@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-agentos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agentos}
+      POSTGRES_DB: ${POSTGRES_DB:-agentos_mock}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentos"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  runtime-mock:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.runtime-mock
+    ports:
+      - "${RUNTIME_PORT:-8001}:8001"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://agentos:agentos@postgres:5432/agentos_mock}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  registry-mock:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.registry-mock
+    ports:
+      - "${REGISTRY_PORT:-8002}:8002"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://agentos:agentos@postgres:5432/agentos_mock}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  ingest-mock:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.ingest-mock
+    ports:
+      - "${INGEST_PORT:-8003}:8003"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://agentos:agentos@postgres:5432/agentos_mock}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api-mock:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api-mock
+    ports:
+      - "${API_PORT:-8004}:8004"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://agentos:agentos@postgres:5432/agentos_mock}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  bridge-mock:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.bridge-mock
+    ports:
+      - "${BRIDGE_PORT:-8005}:8005"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://agentos:agentos@postgres:5432/agentos_mock}
+      EXPORT_TO_OTEL: ${EXPORT_TO_OTEL:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  policy-mock:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.policy-mock
+    ports:
+      - "${POLICY_PORT:-8006}:8006"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://agentos:agentos@postgres:5432/agentos_mock}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web-ui:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.web-ui
+    ports:
+      - "${WEB_UI_PORT:-5173}:5173"
+    environment:
+      VITE_API_URL: http://localhost:8004
+    depends_on:
+      - api-mock
+
+volumes:
+  postgres_data:

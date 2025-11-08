@@ -1,0 +1,57 @@
+image:
+  registry: gcr.io/YOUR_PROJECT_ID
+  tag: latest
+  pullPolicy: IfNotPresent
+
+web:
+  host: mock.pluralfocus.com
+  replicaCount: 2
+
+services:
+  runtime:
+    port: 8001
+    replicaCount: 2
+  registry:
+    port: 8002
+    replicaCount: 2
+  ingest:
+    port: 8003
+    replicaCount: 2
+  api:
+    port: 8004
+    replicaCount: 3
+  bridge:
+    port: 8005
+    replicaCount: 1
+  policy:
+    port: 8006
+    replicaCount: 2
+
+postgresql:
+  enabled: true
+  auth:
+    username: agentos
+    password: agentos
+    database: agentos_mock
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi
+
+ingress:
+  enabled: true
+  className: "gce"
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  tls:
+    enabled: true
+    secretName: agentos-tls
+
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "100m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"

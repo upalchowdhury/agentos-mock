@@ -1,0 +1,193 @@
+organizations:
+  - org_id: org_001
+    name: "TechCorp Labs"
+  - org_id: org_002
+    name: "AI Innovations Inc"
+  - org_id: org_003
+    name: "DataStream Systems"
+
+projects:
+  - project_id: proj_001
+    org_id: org_001
+    name: "Content Generation Platform"
+  - project_id: proj_002
+    org_id: org_001
+    name: "Customer Support Bot"
+  - project_id: proj_003
+    org_id: org_002
+    name: "Research Assistant"
+  - project_id: proj_004
+    org_id: org_002
+    name: "Code Review System"
+  - project_id: proj_005
+    org_id: org_003
+    name: "Data Analysis Pipeline"
+  - project_id: proj_006
+    org_id: org_003
+    name: "Compliance Monitor"
+
+agents:
+  - agent_id: agent_writer
+    org_id: org_001
+    project_id: proj_001
+    name: "Content Writer"
+    description: "Generates high-quality written content from prompts"
+    runtime_type: "Model A"
+    protocol: "a2a"
+    model_provider: "OpenAI"
+    model_name: "gpt-4"
+
+  - agent_id: agent_retriever
+    org_id: org_001
+    project_id: proj_001
+    name: "Knowledge Retriever"
+    description: "Retrieves relevant context from knowledge base"
+    runtime_type: "Model B"
+    protocol: "mcp"
+    model_provider: "Anthropic"
+    model_name: "claude-3-5-sonnet"
+
+  - agent_id: agent_planner
+    org_id: org_001
+    project_id: proj_001
+    name: "Task Planner"
+    description: "Plans and orchestrates multi-step workflows"
+    runtime_type: "Model A"
+    protocol: "a2a"
+    model_provider: "OpenAI"
+    model_name: "gpt-4-turbo"
+
+  - agent_id: agent_router
+    org_id: org_001
+    project_id: proj_001
+    name: "Request Router"
+    description: "Routes requests to appropriate specialized agents"
+    runtime_type: "Model A"
+    protocol: "http"
+    model_provider: "Anthropic"
+    model_name: "claude-3-opus"
+
+  - agent_id: agent_analyzer
+    org_id: org_002
+    project_id: proj_003
+    name: "Data Analyzer"
+    description: "Analyzes data patterns and generates insights"
+    runtime_type: "Model B"
+    protocol: "grpc"
+    model_provider: "Vertex"
+    model_name: "gemini-pro"
+
+  - agent_id: agent_validator
+    org_id: org_002
+    project_id: proj_003
+    name: "Quality Validator"
+    description: "Validates output quality and accuracy"
+    runtime_type: "Model A"
+    protocol: "a2a"
+    model_provider: "OpenAI"
+    model_name: "gpt-4"
+
+  - agent_id: agent_summarizer
+    org_id: org_002
+    project_id: proj_004
+    name: "Code Summarizer"
+    description: "Generates concise summaries of code changes"
+    runtime_type: "Model B"
+    protocol: "mcp"
+    model_provider: "Anthropic"
+    model_name: "claude-3-5-sonnet"
+
+  - agent_id: agent_reviewer
+    org_id: org_002
+    project_id: proj_004
+    name: "Code Reviewer"
+    description: "Reviews code for issues and best practices"
+    runtime_type: "Model A"
+    protocol: "http"
+    model_provider: "OpenAI"
+    model_name: "gpt-4-turbo"
+
+  - agent_id: agent_etl
+    org_id: org_003
+    project_id: proj_005
+    name: "ETL Orchestrator"
+    description: "Orchestrates data extraction, transformation, loading"
+    runtime_type: "Model A"
+    protocol: "queue"
+    model_provider: "Bedrock"
+    model_name: "claude-3-sonnet"
+
+  - agent_id: agent_cleaner
+    org_id: org_003
+    project_id: proj_005
+    name: "Data Cleaner"
+    description: "Cleans and normalizes data"
+    runtime_type: "Model B"
+    protocol: "http"
+    model_provider: "Vertex"
+    model_name: "gemini-pro"
+
+  - agent_id: agent_compliance
+    org_id: org_003
+    project_id: proj_006
+    name: "Compliance Checker"
+    description: "Checks data against compliance policies"
+    runtime_type: "Model A"
+    protocol: "a2a"
+    model_provider: "OpenAI"
+    model_name: "gpt-4"
+
+  - agent_id: agent_auditor
+    org_id: org_003
+    project_id: proj_006
+    name: "Audit Logger"
+    description: "Logs all compliance decisions for audit trail"
+    runtime_type: "Model B"
+    protocol: "grpc"
+    model_provider: "Anthropic"
+    model_name: "claude-3-opus"
+
+# Agent interaction patterns (for edge generation)
+workflows:
+  - name: "Content Generation"
+    agents: ["agent_router", "agent_retriever", "agent_planner", "agent_writer"]
+    description: "Router → Retriever → Planner → Writer"
+
+  - name: "Research Analysis"
+    agents: ["agent_analyzer", "agent_validator"]
+    description: "Analyzer → Validator"
+
+  - name: "Code Review"
+    agents: ["agent_summarizer", "agent_reviewer"]
+    description: "Summarizer → Reviewer"
+
+  - name: "Data Processing"
+    agents: ["agent_etl", "agent_cleaner"]
+    description: "ETL → Cleaner"
+
+  - name: "Compliance Check"
+    agents: ["agent_compliance", "agent_auditor"]
+    description: "Compliance → Auditor"
+
+# Cost rates (cents per 1000 tokens)
+cost_rates:
+  OpenAI:
+    gpt-4: { input: 3, output: 6 }
+    gpt-4-turbo: { input: 1, output: 3 }
+  Anthropic:
+    claude-3-opus: { input: 15, output: 75 }
+    claude-3-5-sonnet: { input: 3, output: 15 }
+    claude-3-sonnet: { input: 3, output: 15 }
+  Vertex:
+    gemini-pro: { input: 0.125, output: 0.375 }
+  Bedrock:
+    claude-3-sonnet: { input: 3, output: 15 }
+
+# Generation parameters
+generation:
+  num_traces: 150
+  num_spans_per_trace_range: [5, 12]
+  trace_depth_range: [3, 6]
+  anomaly_rate: 0.08  # 8% of spans have anomalies
+  signature_failure_rate: 0.05  # 5% of edges have signature failures
+  budget_denial_rate: 0.03  # 3% budget cap denials
