@@ -3,9 +3,11 @@ import { AppLayout } from './layouts/AppLayout';
 import { Dashboard } from './pages/Dashboard';
 import { TraceExplorer } from './pages/TraceExplorer';
 import { SequenceDiagram } from './pages/SequenceDiagram';
+import { MultiAgentMap } from './pages/MultiAgentMap';
 import { Flamegraph } from './pages/Flamegraph';
 import { Catalog } from './pages/Catalog';
 import { Policies } from './pages/Policies';
+import { Architecture } from './pages/Architecture';
 import { OtelPreview } from './pages/OtelPreview';
 import { DemoMode } from './pages/DemoMode';
 
@@ -19,9 +21,11 @@ function App() {
           <Route path="traces" element={<TraceExplorer />} />
           <Route path="traces/:traceId" element={<TraceExplorer />} />
           <Route path="sequence" element={<SequenceDiagram />} />
+          <Route path="map" element={<MultiAgentMap />} />
           <Route path="flamegraph" element={<Flamegraph />} />
           <Route path="catalog" element={<Catalog />} />
           <Route path="policies" element={<Policies />} />
+          <Route path="architecture" element={<Architecture />} />
           <Route path="otel/preview" element={<OtelPreview />} />
           <Route path="demo" element={<DemoMode />} />
         </Route>

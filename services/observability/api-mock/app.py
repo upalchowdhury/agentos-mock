@@ -584,6 +584,114 @@ async def simulate_incident():
         session.close()
 
 
+@app.get("/api/graph")
+async def get_graph(trace_id: str):
+    """Get multi-agent graph visualization data for a trace."""
+    session = Session()
+    try:
+        import random
+        
+        trace = session.query(TelemetryTrace).filter_by(trace_id=trace_id).first()
+        if not trace:
+            raise HTTPException(status_code=404, detail="Trace not found")
+        
+        spans = session.query(TelemetrySpan).filter_by(trace_id=trace_id).all()
+        edges = session.query(TelemetryEdge).filter_by(trace_id=trace_id).all()
+        
+        # Build nodes from spans
+        nodes = []
+        for span in spans:
+            nodes.append({
+                "id": f"{span.kind}:{span.span_id}",
+                "label": span.kind,
+                "role": "agent" if span.kind in ["prompt", "subagent"] else "tool",
+                "version": "v1.0",
+                "prompt_excerpt": span.excerpts[:50] if span.excerpts else "Processing...",
+                "latency_ms": span.duration_ms,
+                "tokens_in": span.tokens_in,
+                "tokens_out": span.tokens_out,
+                "cost_cents": int((span.tokens_in + span.tokens_out) * 0.002),
+                "confidence": random.uniform(0.75, 0.95),
+                "hallucination_score": random.uniform(0.05, 0.20),
+                "guardrail_passed": span.status.value != "error",
+                "rbac_decision": "allow",
+                "signature_verified": span.signature_verified,
+                "status": span.status.value,
+                "deterministic": bool(trace.config_hash),
+                "risk_flags": [] if span.status.value != "error" else ["error"],
+                "policy_ids": ["org.default.budget-cap"],
+                "config_hash": trace.config_hash
+            })
+        
+        # Build edge list
+        graph_edges = []
+        for edge in edges:
+            graph_edges.append({
+                "id": edge.edge_id,
+                "from": f"{edge.protocol.value}:{edge.from_span_id}",
+                "to": f"{edge.protocol.value}:{edge.to_span_id}",
+                "protocol": edge.protocol.value,
+                "size_bytes": edge.payload_size_bytes,
+                "signature_verified": edge.signature_verified,
+                "latency_ms": edge.latency_ms,
+                "status": "success",
+                "risk_flags": [],
+                "edge_confidence": random.uniform(0.7, 0.9)
+            })
+        
+        # Calculate stats
+        error_nodes = len([s for s in spans if s.status.value != "ok"])
+        confidences = [n["confidence"] for n in nodes]
+        hallucinations = [n["hallucination_score"] for n in nodes]
+        
+        return {
+            "trace": {
+                "trace_id": trace_id,
+                "org_id": trace.org_id,
+                "start_ts": trace.start_timestamp.isoformat(),
+                "end_ts": trace.end_timestamp.isoformat() if trace.end_timestamp else None
+            },
+            "nodes": nodes,
+            "edges": graph_edges,
+            "stats": {
+                "node_count": len(nodes),
+                "edge_count": len(graph_edges),
+                "error_nodes": error_nodes,
+                "avg_confidence": sum(confidences) / len(confidences) if confidences else 0,
+                "avg_hallucination": sum(hallucinations) / len(hallucinations) if hallucinations else 0
+            },
+            "paths": [{
+                "id": "path_1",
+                "nodes": [n["id"] for n in nodes[:3]],
+                "edges": [e["id"] for e in graph_edges[:2]],
+                "total_latency_ms": sum(n["latency_ms"] for n in nodes[:3]),
+                "cumulative_hallucination": sum(n["hallucination_score"] for n in nodes[:3]),
+                "min_confidence": min(n["confidence"] for n in nodes[:3]) if nodes else 0,
+                "policy_outcomes": ["allow"] * len(nodes[:3]),
+                "red_flags": []
+            }] if nodes else []
+        }
+    finally:
+        session.close()
+
+
+@app.get("/api/graph/search")
+async def search_graph(q: str):
+    """Search nodes by label or ID."""
+    session = Session()
+    try:
+        # Simple fuzzy search on span kinds and IDs
+        spans = session.query(TelemetrySpan).filter(
+            TelemetrySpan.kind.like(f'%{q}%')
+        ).limit(20).all()
+        
+        results = [{"id": span.span_id, "label": span.kind, "trace_id": span.trace_id} 
+                   for span in spans]
+        return results
+    finally:
+        session.close()
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8004)
