@@ -51,6 +51,6 @@ spec:
         - containerPort: 5173
         env:
         - name: VITE_API_URL
-          value: "http://api-mock:8004"
+          value: "auto"
         resources:
           {{- toYaml .Values.resources | nindent 10 }}

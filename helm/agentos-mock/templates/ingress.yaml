@@ -8,14 +8,16 @@ metadata:
     {{- toYaml .Values.ingress.annotations | nindent 4 }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
-  {{- if .Values.ingress.tls.enabled }}
+  {{- if and .Values.ingress.tls.enabled .Values.web.host }}
   tls:
   - hosts:
     - {{ .Values.web.host }}
     secretName: {{ .Values.ingress.tls.secretName }}
   {{- end }}
   rules:
-  - host: {{ .Values.web.host }}
+  - {{- if .Values.web.host }}
+    host: {{ .Values.web.host }}
+    {{- end }}
     http:
       paths:
       - path: /
@@ -25,4 +27,25 @@ spec:
             name: web-ui
             port:
               number: 5173
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: api-mock
+            port:
+              number: {{ index .Values.services "api" "port" }}
+      - path: /policy
+        pathType: Prefix
+        backend:
+          service:
+            name: policy-mock
+            port:
+              number: {{ index .Values.services "policy" "port" }}
+      - path: /otel
+        pathType: Prefix
+        backend:
+          service:
+            name: bridge-mock
+            port:
+              number: {{ index .Values.services "bridge" "port" }}
 {{- end }}

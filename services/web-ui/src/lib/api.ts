@@ -2,7 +2,14 @@
  * Typed API client for AgentOS Mock
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8004';
+// Determine API base URL
+// - If VITE_API_URL is provided and not 'auto', use it (useful for local dev)
+// - Otherwise, default to current origin so calls go through Ingress (/api, /policy, /otel)
+const VITE_API_URL = (import.meta as any)?.env?.VITE_API_URL as string | undefined;
+const API_BASE_URL =
+  VITE_API_URL && VITE_API_URL !== 'auto'
+    ? VITE_API_URL
+    : (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8004');
 
 export interface Trace {
   trace_id: string;
