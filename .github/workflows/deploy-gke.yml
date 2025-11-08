@@ -1,0 +1,97 @@
+name: Deploy to GKE
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GKE_CLUSTER: ${{ secrets.GKE_CLUSTER_NAME }}
+  GKE_ZONE: ${{ secrets.GKE_ZONE }}
+  REGISTRY: ${{ secrets.ARTIFACT_REGISTRY }}
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy to GKE
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Configure Docker for Artifact Registry
+      run: |
+        gcloud auth configure-docker us-central1-docker.pkg.dev
+
+    - name: Get GKE credentials
+      run: |
+        gcloud container clusters get-credentials $GKE_CLUSTER \
+          --region $GKE_ZONE \
+          --project $PROJECT_ID
+
+    - name: Build and push Docker images
+      run: |
+        # Build all service images
+        services=("web-ui" "api-mock" "policy-mock" "ingest-mock" "bridge-mock" "registry-mock" "runtime-mock")
+        
+        for service in "${services[@]}"; do
+          echo "🔨 Building $service..."
+          
+          if [ "$service" = "web-ui" ]; then
+            docker build -f infra/docker/Dockerfile.web-ui \
+              -t ${REGISTRY}/${service}:${GITHUB_SHA::7} \
+              -t ${REGISTRY}/${service}:latest \
+              .
+          else
+            docker build -f infra/docker/Dockerfile.${service} \
+              -t ${REGISTRY}/${service}:${GITHUB_SHA::7} \
+              -t ${REGISTRY}/${service}:latest \
+              .
+          fi
+          
+          echo "📤 Pushing $service..."
+          docker push ${REGISTRY}/${service}:${GITHUB_SHA::7}
+          docker push ${REGISTRY}/${service}:latest
+        done
+
+    - name: Deploy to GKE with Helm
+      run: |
+        # Install/upgrade Helm release
+        helm upgrade --install agentos-mock ./helm/agentos-mock \
+          --namespace agentos \
+          --create-namespace \
+          --set image.registry=${REGISTRY} \
+          --set image.tag=${GITHUB_SHA::7} \
+          --set web.host=agentos-mock.example.com \
+          --wait \
+          --timeout 10m
+
+    - name: Verify deployment
+      run: |
+        kubectl get pods -n agentos
+        kubectl get services -n agentos
+        
+    - name: Print access information
+      run: |
+        echo "🎉 Deployment complete!"
+        echo ""
+        echo "📋 Deployment Info:"
+        echo "  - Commit SHA: ${GITHUB_SHA::7}"
+        echo "  - Namespace: agentos"
+        echo ""
+        echo "🔍 Check status:"
+        echo "  kubectl get pods -n agentos"
+        echo "  kubectl logs -n agentos -l app=web-ui"
+        echo ""
+        echo "🌐 To access the application, run:"
+        echo "  kubectl port-forward -n agentos svc/web-ui 8080:80"

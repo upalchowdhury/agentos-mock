@@ -43,3 +43,19 @@ Preferred deployment strategy:
 A) Deploy on every push to main
 B) Deploy only on tagged releases (e.g., v1.0.0)
 C) Deploy on push to main AND manual workflow dispatch
+
+
+
+INFO
+------
+
+Artifact Registry:
+us-central1-docker.pkg.dev/abstract-hydra-477523-q7/agentos-mock
+
+
+GKE Cluster:
+GCP Project ID: abstract-hydra-477523-q7
+GKE Cluster Name: autopilot-cluster-1
+GKE Cluster Zone: us-central1-a
+Mode: Autopilot
+Location type: Regional

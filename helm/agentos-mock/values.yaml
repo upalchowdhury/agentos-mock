@@ -1,11 +1,15 @@
 image:
-  registry: gcr.io/YOUR_PROJECT_ID
+  registry: us-central1-docker.pkg.dev/abstract-hydra-477523-q7/agentos-mock
   tag: latest
   pullPolicy: IfNotPresent
 
 web:
   host: mock.pluralfocus.com
-  replicaCount: 2
+  replicaCount: 1
+  port: 5173
+  service:
+    type: LoadBalancer
+    port: 80
 
 services:
   runtime:
