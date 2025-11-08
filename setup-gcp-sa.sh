@@ -19,34 +19,50 @@ gcloud config set project ${PROJECT_ID}
 
 # Create the service account
 echo "1️⃣ Creating service account..."
-gcloud iam service-accounts create ${SA_NAME} \
-  --display-name="GitHub Actions Deployer" \
-  --description="Service account for GitHub Actions to deploy to GKE and push to Artifact Registry" \
-  || echo "Service account already exists, continuing..."
+if gcloud iam service-accounts describe ${SA_EMAIL} &>/dev/null; then
+  echo "   ℹ️  Service account already exists"
+else
+  gcloud iam service-accounts create ${SA_NAME} \
+    --display-name="GitHub Actions Deployer" \
+    --description="Service account for GitHub Actions to deploy to GKE and push to Artifact Registry"
+  
+  echo "   ⏳ Waiting for service account to be fully created..."
+  sleep 5
+fi
+
+# Verify service account exists
+if ! gcloud iam service-accounts describe ${SA_EMAIL} &>/dev/null; then
+  echo "❌ ERROR: Service account creation failed"
+  exit 1
+fi
 
 # Grant Artifact Registry Writer role
 echo "2️⃣ Granting Artifact Registry Writer role..."
 gcloud projects add-iam-policy-binding ${PROJECT_ID} \
   --member="serviceAccount:${SA_EMAIL}" \
-  --role="roles/artifactregistry.writer"
+  --role="roles/artifactregistry.writer" \
+  --condition=None || echo "   ⚠️  Role may already be granted"
 
 # Grant Kubernetes Engine Developer role
 echo "3️⃣ Granting Kubernetes Engine Developer role..."
 gcloud projects add-iam-policy-binding ${PROJECT_ID} \
   --member="serviceAccount:${SA_EMAIL}" \
-  --role="roles/container.developer"
+  --role="roles/container.developer" \
+  --condition=None || echo "   ⚠️  Role may already be granted"
 
 # Grant Storage Admin role (needed for GKE deployments)
 echo "4️⃣ Granting Storage Admin role..."
 gcloud projects add-iam-policy-binding ${PROJECT_ID} \
   --member="serviceAccount:${SA_EMAIL}" \
-  --role="roles/storage.admin"
+  --role="roles/storage.admin" \
+  --condition=None || echo "   ⚠️  Role may already be granted"
 
 # Grant Service Account User role (needed to act as service accounts)
 echo "5️⃣ Granting Service Account User role..."
 gcloud projects add-iam-policy-binding ${PROJECT_ID} \
   --member="serviceAccount:${SA_EMAIL}" \
-  --role="roles/iam.serviceAccountUser"
+  --role="roles/iam.serviceAccountUser" \
+  --condition=None || echo "   ⚠️  Role may already be granted"
 
 # Create and download the JSON key
 echo "6️⃣ Creating JSON key..."
