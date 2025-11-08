@@ -1,0 +1,91 @@
+# Default values for agentos-mock Helm chart
+# These values are used for a GKE deployment of the mock demo
+# Update image.registry and web.host for your project
+
+image:
+  registry: gcr.io/YOUR_PROJECT
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+web:
+  host: mock.YOUR_DOMAIN.com
+  servicePort: 80
+
+api:
+  basePath: /api
+  image: agentos-observability-api
+  port: 8080
+
+policy:
+  basePath: /policy
+  image: agentos-policy-api
+  port: 8081
+
+otel:
+  basePath: /otel
+  image: agentos-o11y-bridge
+  port: 8082
+
+runtime:
+  basePath: /runtime
+  image: agentos-runtime
+  port: 8083
+
+registry:
+  basePath: /registry
+  image: agentos-registry
+  port: 8084
+
+database:
+  enabled: true
+  name: agentos_db
+  user: agentos
+  password: agentos123
+  host: agentos-db
+  port: 5432
+
+ingress:
+  enabled: true
+  className: "gce"
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: agentos-mock-ip
+    networking.gke.io/managed-certificates: agentos-mock-cert
+  hosts:
+    - host: mock.YOUR_DOMAIN.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: agentos-mock-cert
+      hosts:
+        - mock.YOUR_DOMAIN.com
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+env:
+  ENVIRONMENT: "demo"
+  DATABASE_URL: "postgresql://agentos:agentos123@agentos-db:5432/agentos_db"
+  EXPORT_TO_OTEL: "false"
+  DEMO_MODE: "true"
+
+serviceAccount:
+  create: true
+  name: agentos-mock
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
