@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: {{ $service }}-mock
-        image: {{ $.Values.image.registry }}/agentos-{{ $service }}-mock:{{ $.Values.image.tag }}
+        image: {{ $.Values.image.registry }}/{{ $service }}-mock:{{ $.Values.image.tag }}
         imagePullPolicy: {{ $.Values.image.pullPolicy }}
         ports:
         - containerPort: {{ index $.Values.services $service "port" }}
@@ -45,7 +45,7 @@ spec:
     spec:
       containers:
       - name: web-ui
-        image: {{ .Values.image.registry }}/agentos-web-ui:{{ .Values.image.tag }}
+        image: {{ .Values.image.registry }}/web-ui:{{ .Values.image.tag }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
         - containerPort: 5173
