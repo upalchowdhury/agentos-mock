@@ -92,7 +92,6 @@ jobs:
           --namespace agentos \
           --set image.registry=${REGISTRY} \
           --set image.tag=${GITHUB_SHA::7} \
-          --set postgresql.enabled=false \
           --set resources.requests.cpu=100m \
           --set resources.requests.memory=256Mi \
           --set resources.limits.cpu=1000m \
