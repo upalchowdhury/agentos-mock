@@ -5,6 +5,8 @@ kind: Service
 metadata:
   name: {{ $service }}-mock
   namespace: {{ $.Release.Namespace }}
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
 spec:
   selector:
     app: {{ $service }}-mock
@@ -12,7 +14,7 @@ spec:
   - name: http
     port: {{ index $.Values.services $service "port" }}
     targetPort: {{ index $.Values.services $service "port" }}
-  type: {{- if $.Values.ingress.enabled }} NodePort {{- else }} ClusterIP {{- end }}
+  type: ClusterIP
 {{- end }}
 ---
 apiVersion: v1
@@ -20,6 +22,8 @@ kind: Service
 metadata:
   name: web-ui
   namespace: {{ .Release.Namespace }}
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
 spec:
   selector:
     app: web-ui
@@ -27,4 +31,4 @@ spec:
   - name: http
     port: {{ .Values.web.port }}
     targetPort: {{ .Values.web.port }}
-  type: {{- if .Values.ingress.enabled }} NodePort {{- else }} {{ .Values.web.service.type | default "ClusterIP" }} {{- end }}
+  type: ClusterIP
