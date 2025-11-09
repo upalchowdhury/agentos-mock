@@ -75,6 +75,18 @@ jobs:
         # Create namespace if it doesn't exist
         kubectl create namespace agentos --dry-run=client -o yaml | kubectl apply -f -
         
+        # If a previous Helm operation is stuck in pending-*, clean it up safely
+        if helm status agentos-mock -n agentos >/dev/null 2>&1; then
+          STATUS_LINE=$(helm status agentos-mock -n agentos | sed -n 's/^STATUS: //p')
+          echo "Current Helm release status: ${STATUS_LINE}"
+          if echo "$STATUS_LINE" | grep -qi 'pending'; then
+            echo "Helm release is stuck (pending). Uninstalling release for a clean install..."
+            helm uninstall agentos-mock -n agentos || true
+            # Give the Kubernetes API a moment to finalize deletions
+            sleep 10
+          fi
+        fi
+
         # Install/upgrade Helm release
         helm upgrade --install agentos-mock ./helm/agentos-mock \
           --namespace agentos \
@@ -86,7 +98,8 @@ jobs:
           --set resources.limits.cpu=1000m \
           --set resources.limits.memory=1Gi \
           --wait \
-          --timeout 15m \
+          --atomic \
+          --timeout 20m \
           --debug
 
     - name: Verify deployment
