@@ -7,6 +7,7 @@ metadata:
   namespace: {{ $.Release.Namespace }}
   annotations:
     cloud.google.com/neg: '{"ingress": true}'
+    cloud.google.com/backend-config: '{"ports": {"http": "api-backendconfig"}}'
 spec:
   selector:
     app: {{ $service }}-mock
@@ -24,6 +25,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     cloud.google.com/neg: '{"ingress": true}'
+    cloud.google.com/backend-config: '{"ports": {"http": "web-backendconfig"}}'
 spec:
   selector:
     app: web-ui
