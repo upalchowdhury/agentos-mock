@@ -80,7 +80,6 @@ jobs:
           --namespace agentos \
           --set image.registry=${REGISTRY} \
           --set image.tag=${GITHUB_SHA::7} \
-          --set web.host=agentos-mock.example.com \
           --set postgresql.enabled=false \
           --set resources.requests.cpu=100m \
           --set resources.requests.memory=256Mi \

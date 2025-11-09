@@ -9,9 +9,10 @@ spec:
   selector:
     app: {{ $service }}-mock
   ports:
-  - port: {{ index $.Values.services $service "port" }}
+  - name: http
+    port: {{ index $.Values.services $service "port" }}
     targetPort: {{ index $.Values.services $service "port" }}
-  type: ClusterIP
+  type: {{- if $.Values.ingress.enabled }} NodePort {{- else }} ClusterIP {{- end }}
 {{- end }}
 ---
 apiVersion: v1
@@ -23,6 +24,7 @@ spec:
   selector:
     app: web-ui
   ports:
-  - port: 5173
-    targetPort: 5173
-  type: LoadBalancer
+  - name: http
+    port: {{ .Values.web.port }}
+    targetPort: {{ .Values.web.port }}
+  type: {{- if .Values.ingress.enabled }} NodePort {{- else }} {{ .Values.web.service.type | default "ClusterIP" }} {{- end }}

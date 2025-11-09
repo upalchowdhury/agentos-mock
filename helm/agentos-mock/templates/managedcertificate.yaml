@@ -1,0 +1,10 @@
+{{- if and .Values.ingress.enabled .Values.ingress.tls.enabled .Values.web.host }}
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: {{ .Values.ingress.managedCertificateName | default "agentos-managed-cert" }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  domains:
+    - {{ .Values.web.host }}
+{{- end }}
