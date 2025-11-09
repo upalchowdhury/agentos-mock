@@ -51,7 +51,7 @@ ingress:
     # Uncomment to pin a global static IP (create it first):
     # kubernetes.io/ingress.global-static-ip-name: "agentos-lb-ip"
   tls:
-    enabled: true
+    enabled: false
     secretName: ""
   managedCertificateName: agentos-managed-cert
   staticIpName: ""
